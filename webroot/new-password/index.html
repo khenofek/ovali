@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" ng-app="restAdminApp">
+<head>
+  <meta charset="utf-8">
+  <title>New Password</title>
+  <script src="new-password/angular/angular.js"></script>
+  <script src="new-password/js/app.js"></script>
+  <script src="new-password/js/users.js"></script>
+</head>
+<body>
+  <div ng-controller="NewPasswordController">
+      New Password:<br>
+      <form ng-submit="newPassword()">
+        Password: <input type="password" size="20" name="password" ng-model="password"><br>
+        Confirm Password: <input type="password" size="20" name="confirmPassword" ng-model="confirmPassword"><br>
+        <input type="submit" id="submit" value="Submit" />
+      </form><br>
+  </div>
+</body>
+</html>

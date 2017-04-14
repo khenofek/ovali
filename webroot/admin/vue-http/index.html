@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Http</title>
+  <script src="https://npmcdn.com/vue@1.x.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/0.9.3/vue-resource.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToLogin.username"><br>
+      Password: <input type="password" size="20" name="password" v-model="userToLogin.password"><br>
+      <button v-on:click="login(userToLogin)">Login</button> <button v-on:click="logout()">Logout</button><br>
+    </div>
+    Current User: {{ currentUser | json }}<br>
+    Auth Token: {{ auth_token }}
+  <hr>
+    <div>
+      Method: 
+      <select v-model="method">
+  		<option selected>GET</option>
+  		<option>POST</option>
+  		<option>PATCH</option>
+  		<option>PUT</option>
+  		<option>DELETE</option>
+	  </select><br> 
+      {{baseURL}}<input type="text" size="40" name="path" v-model="path" autocomplete="on"><br>
+      <textarea rows="10" cols="60" v-model="body"></textarea><br>
+      <button v-on:click="submit()">Submit</button><br>
+      {{responseStatus}}<br>
+      response headers: {{responseHeaders}}<br>
+      <pre>{{responseText}}</pre>
+    </div>
+  </div>
+  <script>
+  var vm = new Vue({
+      el: '#app',
+      data: { 
+    	  userToLogin: {},
+    	  currentUser:null,
+    	  auth_token: null,
+    	  baseURL: null,
+    	  path: null,
+    	  method: null,
+    	  body: null,
+    	  responseStatus: null,
+    	  responseHeaders: [],
+    	  responseText: null
+      },
+	  ready: function() {
+		  this.baseURL = window.location.protocol + "//" + window.location.host + "/";
+		  if (window.localStorage.auth_token) {
+    		  this.$http.post('/users/authorise',{sessionID:window.localStorage.auth_token}).then((res) => {
+    			  this.auth_token = window.localStorage.auth_token
+    			  this.currentUser = res.json()
+    	      }, (response) => {
+    	          // error callback
+    	      });			  
+		  }
+	  },      
+      methods: {
+    	  logout: function() {
+    		  window.localStorage.removeItem('auth_token');
+    		  this.currentUser = null
+    		  this.auth_token = null;
+    	  },
+    	  login: function(user) {
+    		  this.$http.post('/users/login',user).then((res) => {
+    	          this.currentUser = res.json().user;
+    	          window.localStorage.setItem('auth_token', res.json().sessionID);
+    	          this.auth_token = res.json().sessionID;
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  },
+    	  submit: function() {
+    		  var myHeaders = new Headers({
+    			  'mc_authorization': 'uId,uName,sId ' + this.currentUser['@rid'].substring(1) + ',' + this.currentUser['username'] + ',' + this.auth_token
+    		  })
+    		  var myInit = { method: this.method,
+    	               		 headers: myHeaders 
+    	               	   }
+    		  if (this.body) myInit['body'] = this.body
+    		  fetch(this.baseURL + this.path, myInit).then(function(response) {
+    			vm.$data.responseStatus = response.status
+    			vm.$data.responseHeaders = []
+    			for (var pair of response.headers.entries()) {
+    				vm.$data.responseHeaders.push(pair[0]+ ': '+ pair[1])
+    			}
+    		    response.json().then(function(resJson) {
+    		    	vm.$data.responseText = JSON.stringify(resJson, null, 2)
+    		    })
+    		  })
+    		  .catch(function(error) {
+  				console.log('There has been a problem with your fetch operation: ' + error.message);
+			  });
+    	  }
+      }
+    })
+  </script>
+</body>
+</html>

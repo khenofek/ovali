@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" ng-app="restAdminApp">
+<head>
+  <meta charset="utf-8">
+  <title>REST Admin</title>
+  <script src="admin-rest/angular/angular.js"></script>
+  <script src="admin-rest/js/app.js"></script>
+  <script src="admin-rest/js/users.js"></script>
+</head>
+<body>
+
+  <div ng-controller="UserController">
+      User Management:<br>
+      <form ng-submit="login()">
+        Username: <input type="text" size="20" name="username" ng-model="username"><br>
+        Password: <input type="password" size="20" name="password" ng-model="password"><br>
+        <input type="submit" id="login" value="Login" />
+      </form><br>
+      <button ng-click="logout()">Logout</button><br>
+      State: {{userManager}}<br>
+      Masquared:<br>
+      <form ng-submit="enterMasquaredMode()">
+        User Id: <input type="text" size="10" name="mId" ng-model="mId"><br>
+        <input type="submit" id="masquared" value="Masquared" />
+      </form><br>      
+  </div>
+  <hr>
+  <div ng-controller="RestAdminController">
+    <form ng-submit="submit()">
+      http method: <select ng-model="method">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+      </select> <br>
+      URL: <input type="text" size="60" name="url" ng-model="url"><br>
+      <textarea rows="10" cols="50" ng-model="postdata"></textarea><br>
+      <input type="submit" id="submit" value="Submit" />
+    </form><br>
+  {{ submited }}<br>
+  status: {{ status }}<br>
+  headers: {{ headers }}<br>
+  data: {{ data }}<br>
+  error data: {{errorData}}
+  </div><hr>
+<div ng-controller="UsersAdminController">
+Users Admin<br><br>
+
+Users Table:<br>
+<table border="1">
+  <tr>
+    <th>User ID</th>
+    <th>Active</th>
+    <th>Activated</th>
+    <th>Username</th>
+    <th>Email</th>
+    <th>Roles</th>
+  </tr>
+  <tr ng-repeat="user in allUsers">
+      <td>{{user['@rid'].substring(1)}}</td>
+      <td>{{userActivationByUsername[toUppercase(user['username'])].isActive}}</td>
+      <td>{{userActivationByUsername[toUppercase(user['username'])].isActivatedByUser}}</td>
+      <td>{{user['username']}}</td>
+      <td>{{user['email']}}</td>
+      <td>{{user['roles']}}</td>
+  </tr>
+</table><br>
+<br>
+Register new user:
+<form ng-submit="registerUser()">
+        username: <input type="text" size="20" name="username" ng-model="username"><br>
+        email: <input type="text" size="20" name="email" ng-model="email"><br>
+        password: <input type="password" size="20" name="password" ng-model="password"><br>
+        <input type="submit" id="submit" value="Register" />
+</form><br>
+{{userRegisterResult}}
+<br>
+Update user password:
+<form ng-submit="updateUserPassword()">
+        User ID: <input type="text" name="UPuserId" ng-model="UPuserId"><br>
+        Username: <input type="text" size="20" name="UPusername" ng-model="UPusername"><br>
+        New Password: <input type="password" size="20" name="newPassword" ng-model="newPassword"><br>
+        Is Active: <input type="checkbox" name="isActive" ng-model="isActive"><br>
+        <input type="submit" id="submit" value="Update Password" />
+</form><br>
+error data: {{errorData}} 
+ </div>
+</body>
+</html>

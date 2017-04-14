@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Manage Users</title>
+  <script src="https://npmcdn.com/vue@1.x.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/0.9.3/vue-resource.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToLogin.username"><br>
+      Password: <input type="password" size="20" name="password" v-model="userToLogin.password"><br>
+      <button v-on:click="login(userToLogin)">Login</button> <button v-on:click="logout()">Logout</button><br>
+    </div>
+    Current User: {{ currentUser | json }}<br>
+    Auth Token: {{ auth_token }}
+  <hr>  
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToRegister.username"><br>
+      Email: <input type="text" size="20" name="email" v-model="userToRegister.email"><br>
+      Password: <input type="password" size="20" name="password" v-model="userToRegister.password"><br>
+      <button v-on:click="register(userToRegister)">Register</button><br>
+    </div>  
+    {{resReg | json}}
+  <hr>
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToUpdate.username"><br>
+      UserID: <input type="text" size="20" name="userID" v-model="userToUpdateID"><br>
+      New Password: <input type="password" size="20" name="newPassword" v-model="userToUpdate.newPassword"><br>
+      <button v-on:click="userUpdate(userToUpdate)">Update User</button><br>
+    </div>  
+  </div>
+    <script>
+    new Vue({
+      el: '#app',
+      data: { 
+    	  userToLogin: {},
+    	  currentUser:{},
+    	  auth_token: null,
+    	  userToRegister: {},
+    	  userToUpdate: {},
+    	  userToUpdateID: null,
+    	  resReg: null
+      },
+	  ready: function() {
+		  if (window.localStorage.auth_token) {
+    		  this.$http.post('/users/authorise',{sessionID:window.localStorage.auth_token}).then((res) => {
+    			  this.auth_token = window.localStorage.auth_token
+    			  this.currentUser = res.json()
+    			  this.loadUsersPage(0)
+    	      }, (response) => {
+    	          // error callback
+    	      });			  
+		  }
+	  },      
+      methods: {
+    	  logout: function() {
+    		  window.localStorage.removeItem('auth_token');
+    		  this.currentUser = {}
+    		  this.auth_token = null;
+    	  },
+    	  login: function(user) {
+    		  this.$http.post('/users/login',user).then((res) => {
+    	          this.currentUser = res.json().user;
+    	          window.localStorage.setItem('auth_token', res.json().sessionID);
+    	          this.auth_token = res.json().sessionID;
+        		  this.loadUsersPage(0)
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  },
+    	  register: function(user) {
+    		  this.$http.post('/users/register',user).then((res) => {
+    			  this.resReg = res.json()
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  },
+    	  userUpdate: function(user) {
+    		  var headers = {"mc_authorization" : 'uId,uName,sId ' + this.currentUser['@rid'].substring(1) + ',' +
+					  this.currentUser['username'] + ',' + this.auth_token }
+    		  this.$http.patch('/rest/users/' + this.userToUpdateID, user, { headers: headers }).then((res) => {
+    			  this.resReg = res.json()
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  }
+      }
+    })
+    </script>
+</body>
+</html>

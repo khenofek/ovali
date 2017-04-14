@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Users</title>
+  <script src="https://npmcdn.com/vue@1.x.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/0.9.3/vue-resource.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToLogin.username"><br>
+      Password: <input type="password" size="20" name="password" v-model="userToLogin.password"><br>
+      <button v-on:click="login(userToLogin)">Login</button> <button v-on:click="logout()">Logout</button><br>
+    </div>
+    Current User: {{ currentUser | json }}
+  <hr>  
+	Users Table<br>
+	<span v-for="page in pages">
+	  <button v-on:click="loadUsersPage(page)">{{page + 1}}</button>
+	</span>
+	<table border="1">
+  <tr>
+    <th>User ID</th>
+    <th>Username</th>
+    <th>Registration Time</th>
+    <th>Email</th>
+    <th>Name</th>
+    <th>Roles</th>
+    <th>Platform</th>
+  </tr>
+  <tr v-for="user in users">
+      <td><a href="/admin/vue-users/user.html?u={{user['@rid'].substring(1)}}">{{user['@rid'].substring(1)}}</a></td>
+      <td>{{user['username']}}</td>
+      <td>{{user['created'].substring(0,19)}}</td>
+      <td>{{user['email']}}</td>
+      <td><span v-if="user['name']">{{user['name'].first + ' ' + user['name'].last}}</span></td>
+      <td>{{user['roles']}}</td>
+      <td>{{user['platform']}}</td>
+  </tr>
+  </table>
+  </div>
+  <script>
+    new Vue({
+      el: '#app',
+      data: { 
+    	  userToLogin: {},
+    	  currentUser:{},
+    	  auth_token: null,
+    	  users: [],
+    	  pages: [],
+    	  itemsAmount: null,
+    	  itemsPerPage: 50
+      },
+	  ready: function() {
+		  if (window.localStorage.auth_token) {
+    		  this.$http.post('/users/authorise',{sessionID:window.localStorage.auth_token}).then((res) => {
+    			  this.auth_token = window.localStorage.auth_token
+    			  this.currentUser = res.json()
+    			  this.loadUsersPage(0)
+    	      }, (response) => {
+    	          // error callback
+    	      });			  
+		  }
+	  },      
+      methods: {
+    	  logout: function() {
+    		  window.localStorage.removeItem('auth_token');
+    		  this.currentUser = {}
+    		  this.auth_token = null;
+    	  },
+    	  login: function(user) {
+    		  this.$http.post('/users/login',user).then((res) => {
+    	          this.currentUser = res.json().user;
+    	          window.localStorage.setItem('auth_token', res.json().sessionID);
+    	          this.auth_token = res.json().sessionID;
+        		  this.loadUsersPage(0)
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  },
+    	  loadUsersPage: function(page) {
+    		  var headers = {"mc_authorization" : 'uId,uName,sId ' + this.currentUser['@rid'].substring(1) + ',' +
+					  this.currentUser['username'] + ',' + this.auth_token }
+    		  var from = page*this.itemsPerPage;
+    		  var to = (page+1)*this.itemsPerPage-1;
+    		  this.$http.get('/rest/users?envelop&Range=' + from + '-' + to, { headers: headers }).then((res) => {
+    			  this.users = res.json().docs;   
+    			  var itemsAmount = res.json().rangeHeaders['Content-Range'].split("/")[1]
+    			  if (this.itemsAmount != itemsAmount) {
+    	              this.itemsAmount = itemsAmount;
+    	              var numberOfPages = Math.ceil(this.itemsAmount/this.itemsPerPage);
+    	              for (var n = 0; n < numberOfPages; n++) this.pages.push(n);    				  
+    			  }
+    	      }, (response) => {
+    	          // error callback
+    	      });    		  
+    	  }
+      }
+    })
+  </script>
+</body>
+</html>

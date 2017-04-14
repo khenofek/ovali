@@ -1,0 +1,106 @@
+{
+	"recurseMergeIn":true,
+    "http-server": {
+        "host": "localhost",
+        "port": 8080,
+        "filesReadOnly": false,
+        "caching": false,
+        "baseURL": "http://localhost:8080"
+    },    
+  	"services": {
+  		"recurseMergeIn":true,
+  		"users-manager": {  		
+  			"recurseMergeIn":true,	
+			"schema": {
+				"users-login": { "type": "object",
+               		"properties": { "username": { "type":"string" },
+                       	            "password": { "type":"string" }
+                           	      },
+               		"required": ["username", "password"],
+               		"additionalProperties": false
+               	},
+               	"authorise": { "type": "object",
+                    "properties": { "sessionID": { "type":"string" }
+                    },
+                    "required": ["sessionID"],
+                    "additionalProperties": false
+                },
+               	"logout": { "type": "object",
+                    "properties": { "sessionID": { "type":"string" }
+                    },
+                    "required": ["sessionID"],
+                    "additionalProperties": false
+                },
+                "register-anon": { "type": "object",
+                       "properties": { "username": { "type":"string" },
+                                       "email":    { "type":"string" },
+                                       "password": { "type":"string" },
+                                       "recaptchaData": { "type":"object",
+                                                          "properties": { "challenge": { "type":"string" },
+                                                                          "response": { "type":"string" }
+                                                                        },
+                                                          "required": ["challenge","response"],
+                                                          "additionalProperties": false
+                                                        }
+                                     },
+                      "required": ["username","email", "password"],
+                      "additionalProperties": false
+                },
+		        "register-mobile": { "type": "object",
+		                "properties": { "username": { "type":"string" },
+		                                "password": { "type":"string" },
+		                                "uuid":     { "type":"string" },                       
+		                                "email":    { "type":"string" },
+		                                "platform":    { "type":"string" },
+		                                "offersAgreement": { "type":"boolean" },
+		                                "name":     { "type":"object",
+		                               				  "properties": { "first": { "type":"string"},
+                                       				 			      "last":  { "type":"string"}
+		                                       				 		},
+		                                       		  "additionalProperties": false
+		                                            },
+		                                "phone":     { "type":"string" }                                       
+		                              },
+		                "required": ["username", "password","uuid"],
+		                "additionalProperties": false
+		       }                                                    
+			},
+       		"1": {
+       			"implementation": "com.leancrowds.ovali.users.UsersManagerReal",
+       			"com.leancrowds.ovali.users.UsersManagerReal": {
+       				"passwordHashIterations":1024,
+       				"adminEmails": ["admin@example.com"],
+       				"newPasswordPath": "http://localhost/new-password",
+       				"siteEmail":"webmaster@example.com",
+       				"appName":"Example"
+       			}       			
+       		}
+       	},
+       	"rest-manager": {
+       		"1": {
+       			"implementation": "com.leancrowds.ovali.rest.RestManagerReal",
+       			"com.leancrowds.ovali.rest.RestManagerReal": {
+       				"resources": {
+       					"users": {
+       						"passwordHashIterations":1024
+       					}
+       				}
+       			}
+       		}
+       	},
+       	"orient-persistor": {
+       		"1": {
+       			"implementation": "com.leancrowds.ovali.orient.OrientPersistorReal",
+       			"com.leancrowds.ovali.orient.OrientPersistorReal": {
+       				"serverIPaddress": "0.0.0.0",       				
+       				"dbURL":"plocal:/db-path",
+       				"dbUser":"admin",
+       				"dbPassword":"password"
+       			}
+       		}
+       	},
+       	"mailer": {
+       		"fake": true
+       	}       	
+    }
+}

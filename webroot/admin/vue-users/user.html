@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin User Page</title>
+  <script src="https://npmcdn.com/vue@1.x.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/0.9.3/vue-resource.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div>
+      Username: <input type="text" size="20" name="username" v-model="userToLogin.username"><br>
+      Password: <input type="password" size="20" name="password" v-model="userToLogin.password"><br>
+      <button v-on:click="login(userToLogin)">Login</button> <button v-on:click="logout()">Logout</button><br>
+    </div>
+    Current User: {{ currentUser | json }}<br>
+    Auth Token: {{ auth_token }}
+  <hr>  
+    User Data<br>
+    {{ userData | json }}
+  <script>
+    new Vue({
+      el: '#app',
+      data: { 
+    	  userToLogin: {},
+    	  currentUser:{},
+    	  auth_token: null,
+    	  userData: null
+      },
+	  ready: function() {
+		  if (window.localStorage.auth_token) {
+    		  this.$http.post('/users/authorise',{sessionID:window.localStorage.auth_token}).then((res) => {
+    			  this.auth_token = window.localStorage.auth_token
+    			  this.currentUser = res.json()
+    			  this.loadUserData()
+    	      }, (response) => {
+    	          // error callback
+    	      });			  
+		  }
+	  },      
+      methods: {
+    	  logout: function() {
+    		  window.localStorage.removeItem('auth_token');
+    		  this.currentUser = {}
+    		  this.auth_token = null;
+    	  },
+    	  login: function(user) {
+    		  this.$http.post('/users/login',user).then((res) => {
+    	          this.currentUser = res.json().user;
+    	          window.localStorage.setItem('auth_token', res.json().sessionID);
+    	          this.auth_token = res.json().sessionID;
+        		  this.loadUsersPage(0)
+    	      }, (response) => {
+    	          // error callback
+    	      });
+    	  },
+    	  getParameterByName: function (name) {
+    		    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    		    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+    	  },
+    	  loadUserData() {
+    		  var headers = {"mc_authorization" : 'uId,uName,sId ' + this.currentUser['@rid'].substring(1) + ',' +
+					  this.currentUser['username'] + ',' + this.auth_token }
+    		  this.$http.get('/rest/users/' + this.getParameterByName('u') + '?userActivations', { headers: headers }).then((res) => {
+    			 this.userData = res.json(); 
+    		  });
+    	  }
+      }
+    })
+    </script>
+</body>
+</html>

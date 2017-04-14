@@ -1,0 +1,33 @@
+<div>
+    Username: <input type="text" size="20" name="username" [(ngModel)]="username"><br>
+    Password: <input type="password" size="20" name="password" [(ngModel)]="password"><br>
+    <button (click)="login(username,password)">Login</button> <button (click)="logout()">Logout</button><br>
+</div>
+{{user | json}}
+<hr>
+<div>
+	Users Table<br>
+	<span *ngFor="let page of pages">
+	  <button (click)="loadUsersPage(page)">{{page + 1}}</button>
+	</span><br>
+	<table border="1">
+  <tr>
+    <th>User ID</th>
+    <th>Username</th>
+    <th>Registration Time</th>
+    <th>Email</th>
+    <th>Name</th>
+    <th>Roles</th>
+    <th>Platform</th>
+  </tr>
+  <tr *ngFor="let user of users">
+      <td><a href="#/user?u={{user['@rid'].substring(1)}}">{{user['@rid'].substring(1)}}</a></td>
+      <td>{{user['username']}}</td>
+      <td>{{user['created'].substring(0,19)}}</td>
+      <td>{{user['email']}}</td>
+      <td><span *ngIf="user['name']">{{user['name'].first + ' ' + user['name'].last}}</span></td>
+      <td>{{user['roles']}}</td>
+      <td>{{user['platform']}}</td>
+  </tr>
+</table>
+</div>
